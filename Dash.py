@@ -28,7 +28,7 @@ import math
 
 
 #archivo_escuelas = "escuelas.geojson"
-archivo_escuelas ="Casos_positivos_de_Covid-19_reportados.geojson"
+archivo_escuelas ="https://raw.githubusercontent.com/lupipedraza/Escuelas_Covid19/main/Casos_positivos_de_Covid-19_reportados.csv"#"Casos_positivos_de_Covid-19_reportados.csv"
 escuelas = gpd.read_file(archivo_escuelas)
 escuelas = escuelas.assign(positivos=0, sospechosos=0, burbujas_aisladas=0, escuela_cerrada=False)
 
@@ -106,9 +106,11 @@ plt.savefig('mapa.png')
 #%%
 
 
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 #app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app = dash.Dash(__name__)
+#app = dash.Dash(__name__)
 
 
 
@@ -133,20 +135,38 @@ app.layout = html.Div( children=[
         value='Cantidad_de_casos_positivos_de_covid_19__Docentes'
     ),
 
-    dcc.Graph(
-        id='mapa',
-        figure={}
-    ),
+
+    html.Div([
+        html.Div([
+            html.H3('Mapa de las escuelas'),
+            dcc.Graph(
+                    id='mapa',
+                    figure={}
+                    )
+        
+
+
+        ], className="six columns"),
+
+        html.Div([
+            html.H3('Evolución'),
+            dcc.Graph(
+                    id='grafico',
+                    figure={}
+                    )
+        ], className="six columns"),
+    ], className="row"),     
+
+    
     #html.Br(),
     #html.Div(id='output_container', children=[])
-    html.Div(children='Visualización desarrollada por Ideas de Pie en base a la información recolectada por UTE'),
-
-
+html.Div(children='Visualización desarrollada por Ideas de Pie en base a la información recolectada por UTE')
 ])
 
 # Connect the Plotly graphs with Dash Components
 @app.callback(
    [Output(component_id='mapa', component_property='figure')],
+   [Output(component_id='grafico', component_property='figure')],
     [Input(component_id='lista', component_property='value')]
 )
 def update_graph(option_slctd):
@@ -160,8 +180,14 @@ def update_graph(option_slctd):
              'Cantidad_de_Docentes_aislados':'blue',
              'Cantidad_de_trabajadorxs_no_docentes_aislados':'violet'}
 
-    #container = "Escuelas por {}".format(option_slctd)
+    dic_nom={'Cantidad_de_casos_positivos_de_covid_19__Docentes':'Docentes positivxs',
+             'Cantidad_de_casos_positivos_de_covid_19__Alumnxs':'Alumnxs positivxs',
+             'Cantidad_de_casos_positivos_de_covid_19__Trabajadorxs_no_docent':'No docentes positivxs',
+             'Cantidad_de_alumnxs_aislados':'Docentes aisladxs',
+             'Cantidad_de_Docentes_aislados':'Alumnos aisladxs',
+             'Cantidad_de_trabajadorxs_no_docentes_aislados':'No docentes aisladxs'}
 
+    #container = "Escuelas por {}".format(option_slctd)
     dff = escuelas.copy()
     #dff=escuelas[escuelas['burbujas_aisladas']>0]
     coordenada_x=[a.x for a in dff.geometry]
@@ -171,7 +197,21 @@ def update_graph(option_slctd):
 
     dff[option_slctd]=[float(a) if a!="" else 0 for a in dff[option_slctd]]
     #fig = px.scatter(x=[0, 1, 2, 3, 4], y=[0, 1, 4, 9, 16])
+    graf2=pd.DataFrame()
+    indice=dic_nom[option_slctd]
+    graf2['fecha']=pd.to_datetime(escuelas['Fecha_de_confirmaci__n'],dayfirst=True)
+    graf2[indice]=[float(a) if a!='' else 0 for a in escuelas[option_slctd]]
 
+    
+    graf2=graf2.groupby([pd.Grouper(freq='D',key='fecha')]).sum()
+    graf2=graf2.cumsum()
+    graf2=graf2.reset_index()
+    #graf2['color']=dic_col[option_slctd]
+
+    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"fecha": "|%B %d, %m"},color_discrete_sequence=[dic_col[option_slctd]])#,color=dic_col[option_slctd])
+    fig2.update_xaxes(
+    dtick="D",
+    tickformat="%d %b")
 
     
     fig = px.scatter_mapbox(dff, lat="lat", lon="lon", hover_name="Name", hover_data=["Distrito_Escolar", "__rea_Nivel_Modalidad"],
@@ -180,7 +220,7 @@ def update_graph(option_slctd):
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     
 
-    return ([fig])
+    return ([fig,fig2])
 
 if __name__ == '__main__':
     app.run_server(debug=True, use_reloader=False)
