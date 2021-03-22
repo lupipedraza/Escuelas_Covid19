@@ -160,7 +160,7 @@ app.layout = html.Div( children=[
     
     #html.Br(),
     #html.Div(id='output_container', children=[])
-html.Div(children='Visualización desarrollada por Ideas de Pie en base a la información recolectada por UTE')
+html.Div(children='Visualización desarrollada por Ideas de Pie en base a la información recolectada por UTE - Secretaría de CyMAT')
 ])
 
 # Connect the Plotly graphs with Dash Components
