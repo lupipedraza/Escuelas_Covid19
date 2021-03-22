@@ -138,7 +138,7 @@ app.layout = html.Div( children=[
 
     html.Div([
         html.Div([
-            html.H3('Mapa de las escuelas'),
+            html.H2('Mapa de las escuelas'),
             dcc.Graph(
                     id='mapa',
                     figure={}
@@ -149,7 +149,7 @@ app.layout = html.Div( children=[
         ], className="six columns"),
 
         html.Div([
-            html.H3('Evolución'),
+            html.H2('Evolución'),
             dcc.Graph(
                     id='grafico',
                     figure={}
@@ -195,7 +195,9 @@ def update_graph(option_slctd):
     dff['lon']=coordenada_x
     dff['lat']=coordenada_y
 
-    dff[option_slctd]=[float(a) if a!="" else 0 for a in dff[option_slctd]]
+    dff[dic_nom[option_slctd]]=[float(a) if a!="" else 0 for a in dff[option_slctd]]
+    dff=dff.rename(columns={"Distrito_Escolar":"Distrito Escolar","__rea_Nivel_Modalidad":'Nivel y Modalidad'})
+    dff["Distrito Escolar"]=[int(float(de)) for de in dff["Distrito Escolar"]]
     #fig = px.scatter(x=[0, 1, 2, 3, 4], y=[0, 1, 4, 9, 16])
     graf2=pd.DataFrame()
     indice=dic_nom[option_slctd]
@@ -208,14 +210,14 @@ def update_graph(option_slctd):
     graf2=graf2.reset_index()
     #graf2['color']=dic_col[option_slctd]
 
-    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"fecha": "|%B %d, %m"},color_discrete_sequence=[dic_col[option_slctd]])#,color=dic_col[option_slctd])
+    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"fecha": "|%B %d, %m"},color_discrete_sequence=[dic_col[option_slctd]],height=400,width=600)#,color=dic_col[option_slctd])
     fig2.update_xaxes(
     dtick="D",
     tickformat="%d %b")
 
     
-    fig = px.scatter_mapbox(dff, lat="lat", lon="lon", hover_name="Name", hover_data=["Distrito_Escolar", "__rea_Nivel_Modalidad"],
-                                color_discrete_sequence=[dic_col[option_slctd]], zoom=10, height=400,width=300,size=option_slctd)
+    fig = px.scatter_mapbox(dff, lat="lat", lon="lon", hover_name="Name", hover_data=["Distrito Escolar", "Nivel y Modalidad"],
+                                color_discrete_sequence=[dic_col[option_slctd]], zoom=10, height=400,width=300,size=dic_nom[option_slctd])
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     
