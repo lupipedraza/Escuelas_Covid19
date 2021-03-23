@@ -154,7 +154,6 @@ app.layout = html.Div( children=[
     html.H1(children='Visualización de casos de COVID19 en las aulas de CABA'),
 
 
-    html.Label('Opciones'),
     
     dcc.Dropdown( id="lista",
         options=[
@@ -245,7 +244,7 @@ def update_graph(option_slctd):
     graf2=graf2.reset_index()
     #graf2['color']=dic_col[option_slctd]
 
-    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"fecha": "|%d %B "},color_discrete_sequence=[dic_col[option_slctd]],height=400,width=600)#,color=dic_col[option_slctd])
+    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"Fecha": "|%d %B "},color_discrete_sequence=[dic_col[option_slctd]],height=400,width=600)#,color=dic_col[option_slctd])
     fig2.update_xaxes(
     dtick="D",
     tickformat="%d %b")
