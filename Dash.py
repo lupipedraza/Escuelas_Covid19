@@ -69,41 +69,76 @@ escuelas_infectadas['lon']=coordenada_x
 escuelas_infectadas['lat']=coordenada_y
 '''
 #%%
-
+'''
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 #Ploteo estático
 #Cargamos los barrios
-'''
+
 archivo_barrios = "barrios.geojson"
 barrios = gpd.read_file(archivo_barrios)
 
 #fig=plt.figure(figsize=(150,150))
 base = barrios.plot(color='white', edgecolor='black',linewidth=0.5)
 
-#medida='Cantidad_de_casos_positivos_de_covid_19__Docentes'
+
 #medida='Cantidad_de_casos_positivos_de_covid_19__Docentes'
 #medida='Cantidad_de_casos_positivos_de_covid_19__Alumnxs'
 medida='Cantidad_de_casos_positivos_de_covid_19__Trabajadorxs_no_docent'
-#medida='Cantidad_de_Docentes_aislados', 'Cantidad_de_alumnxs_aislados'
+#medida='Cantidad_de_Docentes_aislados'
 #medida='Cantidad_de_trabajadorxs_no_docentes_aislados'
 
+dff = escuelas.copy()
 
+
+tamaños=[float(a)*10 if a!="" else 0    for a in escuelas[medida] ]
 escuelas[medida]=[float(a) if a!="" else 0    for a in escuelas[medida] ]
+
 escuelas_infectadas=escuelas[escuelas[medida]>0]
-escuelas_infectadas.plot(ax=base,column=medida, cmap='BuGn',s=30,vmax=1,vmin=0,alpha=0.5)
-plt.title(medida)
+tamaños=[float(a)*10 if a!="" else 0    for a in escuelas_infectadas[medida] ]
+
+escuelas_infectadas.plot(ax=base,column=medida, cmap='Greens',markersize=tamaños,vmax=1,vmin=0,alpha=0.8,figsize=(15,15))
+#escuelas_infectadas.plot(ax=base,column=medida2, cmap='PuBu',s=30,vmax=2,vmin=0,alpha=0.5)
+
+#plt.title(medida)
 plt.xticks([])
 plt.yticks([])
 
-plt.show()
-plt.savefig('mapa.png')
+plt.savefig('mapa'+str(medida)+'.pdf')
 
+
+
+dff[dic_nom[medida]]=[float(a) if a!="" else 0 for a in dff[medida]]
+dff=dff.rename(columns={"Distrito_Escolar":"Distrito Escolar","__rea_Nivel_Modalidad":'Nivel y Modalidad'})
+dff["Distrito Escolar"]=[int(float(de)) for de in dff["Distrito Escolar"]]
+    #fig = px.scatter(x=[0, 1, 2, 3, 4], y=[0, 1, 4, 9, 16])
+graf2=pd.DataFrame()
+indice=dic_nom[medida]
+graf2['fecha']=pd.to_datetime(escuelas['Fecha_de_confirmaci__n'],dayfirst=True)
+graf2[indice]=[float(a) if a!='' else 0 for a in escuelas[medida]]
+
+    
+graf2=graf2.groupby([pd.Grouper(freq='D',key='fecha')]).sum()
+graf2=graf2.cumsum()
+#graf2=graf2.reset_index()
+
+ax=graf2.plot.area(alpha=0.6,color='g',fontsize=12,linewidth=3)
+ax.legend(fontsize=15)
+ax.xaxis.set_major_locator(mdates.DayLocator(interval=2))
+ax.xaxis.set_minor_locator(mdates.DayLocator(interval=30))
+
+# set formatter
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%d-%m'))
+ax.tick_params(axis='x', rotation=90)
+plt.xlabel('Fecha',fontsize=15)
+plt.savefig('Acum_'+str(medida)+'.pdf')
 
 '''
 
-
-
-
 #%%
+
+
+0#%%
 
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
@@ -116,10 +151,10 @@ app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 app.layout = html.Div( children=[
-    html.H1(children='Escuelas con Covid en CABA'),
+    html.H1(children='Visualización de casos de COVID19 en las aulas de CABA'),
 
 
-    html.Label('Opciones de visualización'),
+    html.Label('Opciones'),
     
     dcc.Dropdown( id="lista",
         options=[
@@ -195,7 +230,7 @@ def update_graph(option_slctd):
     dff['lon']=coordenada_x
     dff['lat']=coordenada_y
 
-    dff[dic_nom[option_slctd]]=[float(a) if a!="" else 0 for a in dff[option_slctd]]
+    dff[dic_nom[option_slctd]]=[float(a) if a!=""  else 0 for a in dff[option_slctd]]
     dff=dff.rename(columns={"Distrito_Escolar":"Distrito Escolar","__rea_Nivel_Modalidad":'Nivel y Modalidad'})
     dff["Distrito Escolar"]=[int(float(de)) for de in dff["Distrito Escolar"]]
     #fig = px.scatter(x=[0, 1, 2, 3, 4], y=[0, 1, 4, 9, 16])
@@ -218,6 +253,7 @@ def update_graph(option_slctd):
     
     fig = px.scatter_mapbox(dff, lat="lat", lon="lon", hover_name="Name", hover_data=["Distrito Escolar", "Nivel y Modalidad"],
                                 color_discrete_sequence=[dic_col[option_slctd]], zoom=10, height=400,width=300,size=dic_nom[option_slctd])
+    
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
     
