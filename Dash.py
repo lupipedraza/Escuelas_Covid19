@@ -210,10 +210,10 @@ def update_graph(option_slctd):
 
     dic_col={'Cantidad_de_casos_positivos_de_covid_19__Docentes':'red',
              'Cantidad_de_casos_positivos_de_covid_19__Alumnxs':'blue',
-             'Cantidad_de_casos_positivos_de_covid_19__Trabajadorxs_no_docent':'violet',
+             'Cantidad_de_casos_positivos_de_covid_19__Trabajadorxs_no_docent':'green',
              'Cantidad_de_alumnxs_aislados':'red',
              'Cantidad_de_Docentes_aislados':'blue',
-             'Cantidad_de_trabajadorxs_no_docentes_aislados':'violet'}
+             'Cantidad_de_trabajadorxs_no_docentes_aislados':'green'}
 
     dic_nom={'Cantidad_de_casos_positivos_de_covid_19__Docentes':'Docentes positivxs',
              'Cantidad_de_casos_positivos_de_covid_19__Alumnxs':'Alumnxs positivxs',
@@ -245,19 +245,23 @@ def update_graph(option_slctd):
     graf2=graf2.reset_index()
     #graf2['color']=dic_col[option_slctd]
 
-    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"fecha": "|%B %d, %m"},color_discrete_sequence=[dic_col[option_slctd]],height=400,width=600)#,color=dic_col[option_slctd])
+    fig2=px.area(graf2,x='fecha',y=indice,hover_data={"fecha": "|%d %B "},color_discrete_sequence=[dic_col[option_slctd]],height=400,width=600)#,color=dic_col[option_slctd])
     fig2.update_xaxes(
     dtick="D",
     tickformat="%d %b")
 
     
-    fig = px.scatter_mapbox(dff, lat="lat", lon="lon", hover_name="Name", hover_data=["Distrito Escolar", "Nivel y Modalidad"],
-                                color_discrete_sequence=[dic_col[option_slctd]], zoom=10, height=400,width=300,size=dic_nom[option_slctd])
+    fig = px.scatter_mapbox(dff, lat="lat", lon="lon", hover_name="Name", text=dff["Name"], custom_data=["Distrito Escolar"],
+                                color_discrete_sequence=[dic_col[option_slctd]], zoom=11, height=600,width=600,size=dic_nom[option_slctd])
     
     fig.update_layout(mapbox_style="open-street-map")
     fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-    
-
+    fig.update_traces(hovertemplate='<b>%{text}<b><br> %{marker.size:,}' )# </br> Nivel y Modalidad: %{custom_data[1]:.2f}' )#
+    print("user_defined hovertemplate:", fig.data[0].hovertemplate)
+    fig.update_layout(hoverlabel=dict(
+                    font_size=10,
+                    )
+            )
     return ([fig,fig2])
 
 if __name__ == '__main__':
